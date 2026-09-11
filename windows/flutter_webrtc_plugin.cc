@@ -32,7 +32,14 @@ class FlutterWebRTCPluginImpl : public FlutterWebRTCPlugin {
     registrar->AddPlugin(std::move(plugin));
   }
 
-  virtual ~FlutterWebRTCPluginImpl() {}
+  virtual ~FlutterWebRTCPluginImpl() {
+    // Plugins are destroyed in an arbitrary order, so a dependent plugin can
+    // outlive this one and would otherwise reach a freed FlutterWebRTC through
+    // FlutterWebRTCPluginSharedInstance.
+    if (g_shared_instance == webrtc_.get()) {
+      g_shared_instance = nullptr;
+    }
+  }
 
   BinaryMessenger* messenger() { return messenger_; }
 
