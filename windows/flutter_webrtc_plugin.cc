@@ -90,6 +90,10 @@ flutter_webrtc_plugin::FlutterWebRTC* FlutterWebRTCPluginSharedInstance() {
   return g_shared_instance;
 }
 
+int FlutterWebRTCPluginLocalVideoProcessorAbiVersion() {
+  return 1;
+}
+
 bool FlutterWebRTCPluginSetLocalVideoProcessor(
     const char* track_id,
     flutter_webrtc_plugin::LocalVideoProcessor* processor) {

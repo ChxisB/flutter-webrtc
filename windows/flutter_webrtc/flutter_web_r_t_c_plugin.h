@@ -33,6 +33,12 @@ FLUTTER_PLUGIN_EXPORT bool FlutterWebRTCPluginSetLocalVideoProcessor(
     const char* track_id,
     flutter_webrtc_plugin::LocalVideoProcessor* processor);
 
+// The ABI of LocalVideoProcessor, which dependent plugins vendor a copy of rather
+// than include from here. Bump it whenever that class changes shape — a member, a
+// virtual, an argument — so a plugin built against an older copy refuses to install
+// instead of calling through a vtable both sides disagree about.
+FLUTTER_PLUGIN_EXPORT int FlutterWebRTCPluginLocalVideoProcessorAbiVersion();
+
 #if defined(__cplusplus)
 }  // extern "C"
 #endif
