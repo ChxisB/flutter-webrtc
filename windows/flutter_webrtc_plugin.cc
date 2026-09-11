@@ -81,4 +81,18 @@ void FlutterWebRTCPluginRegisterWithRegistrar(
 
 flutter_webrtc_plugin::FlutterWebRTC* FlutterWebRTCPluginSharedInstance() {
   return g_shared_instance;
+}
+
+bool FlutterWebRTCPluginSetLocalVideoProcessor(
+    const char* track_id,
+    flutter_webrtc_plugin::LocalVideoProcessor* processor) {
+  if (g_shared_instance == nullptr || track_id == nullptr) {
+    return false;
+  }
+  auto bridge = g_shared_instance->VideoProcessingBridgeForId(track_id);
+  if (!bridge) {
+    return false;
+  }
+  bridge->SetProcessor(processor);
+  return true;
 } 

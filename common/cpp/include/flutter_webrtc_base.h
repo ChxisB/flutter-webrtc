@@ -23,6 +23,8 @@
 #include "rtc_peerconnection_factory.h"
 #include "rtc_video_device.h"
 
+#include "local_video_processing_bridge.h"
+
 namespace flutter_webrtc_plugin {
 
 using namespace libwebrtc;
@@ -62,6 +64,11 @@ class FlutterWebRTCBase {
   void RemovePeerConnectionForId(const std::string& id);
 
   void RemoveMediaTrackForId(const std::string& id);
+
+  // The processing bridge behind a local camera track, or null for any other
+  // track. Platform thread only, like the track maps it sits beside.
+  std::shared_ptr<LocalVideoProcessingBridge> VideoProcessingBridgeForId(
+      const std::string& id);
 
   FlutterPeerConnectionObserver* PeerConnectionObserversForId(
       const std::string& id);
@@ -121,6 +128,9 @@ class FlutterWebRTCBase {
   std::map<std::string, scoped_refptr<RTCMediaStream>> local_streams_;
   std::map<std::string, scoped_refptr<RTCMediaTrack>> local_tracks_;
   std::map<std::string, scoped_refptr<RTCVideoCapturer>> video_capturers_;
+  // Camera tracks only, keyed by the id Dart holds.
+  std::map<std::string, std::shared_ptr<LocalVideoProcessingBridge>>
+      video_processing_bridges_;
   std::map<int64_t, std::shared_ptr<FlutterVideoRenderer>> renders_;
   std::map<std::string, std::shared_ptr<FlutterRTCDataChannelObserver>>
       data_channel_observers_;

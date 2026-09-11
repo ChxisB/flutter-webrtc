@@ -400,11 +400,23 @@ void FlutterMediaStream::GetUserVideo(const EncodableMap& constraints,
   video_capturer->StartCapture();
 
   const char* video_source_label = "video_input";
-  scoped_refptr<RTCVideoSource> source = base_->factory_->CreateVideoSource(
-      video_capturer, video_source_label,
-      base_->ParseMediaConstraints(video_constraints));
+  scoped_refptr<RTCVideoSource> camera_source =
+      base_->factory_->CreateVideoSource(
+          video_capturer, video_source_label,
+          base_->ParseMediaConstraints(video_constraints));
 
+  // The camera feeds a hidden track, and the track handed to Dart is built on
+  // a custom source instead, so a processor can sit between the two — the
+  // desktop counterpart of Android's LocalVideoTrack.addProcessor and
+  // iOS/macOS's VideoProcessingAdapter. See local_video_processing_bridge.h.
+  // With no processor installed the bridge forwards each frame unchanged.
   std::string uuid = base_->GenerateUUID();
+  const std::string camera_track_id = uuid + "-camera";
+  scoped_refptr<RTCVideoTrack> camera_track =
+      base_->factory_->CreateVideoTrack(camera_source, camera_track_id.c_str());
+  scoped_refptr<RTCVideoSource> source =
+      base_->factory_->CreateCustomVideoSource(
+          video_source_label, base_->ParseMediaConstraints(video_constraints));
   scoped_refptr<RTCVideoTrack> track =
       base_->factory_->CreateVideoTrack(source, uuid.c_str());
 
@@ -431,6 +443,10 @@ void FlutterMediaStream::GetUserVideo(const EncodableMap& constraints,
 
   base_->local_tracks_[track->id().std_string()] = track;
   base_->video_capturers_[track->id().std_string()] = video_capturer;
+  // Keyed by the id Dart holds. Owns the hidden camera track, and is what
+  // FlutterWebRTCPluginSetLocalVideoProcessor looks up.
+  base_->video_processing_bridges_[track->id().std_string()] =
+      std::make_shared<LocalVideoProcessingBridge>(camera_track, source);
 }
 
 void FlutterMediaStream::GetSources(std::unique_ptr<MethodResultProxy> result) {
@@ -599,6 +615,7 @@ void FlutterMediaStream::MediaStreamDispose(
   for (auto track : video_tracks.std_vector()) {
     stream->RemoveTrack(track);
     base_->local_tracks_.erase(track->id().std_string());
+    base_->video_processing_bridges_.erase(track->id().std_string());
     if (base_->video_capturers_.find(track->id().std_string()) !=
         base_->video_capturers_.end()) {
       auto video_capture = base_->video_capturers_[track->id().std_string()];
