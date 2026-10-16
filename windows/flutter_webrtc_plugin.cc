@@ -34,7 +34,14 @@ class FlutterWebRTCPluginImpl : public FlutterWebRTCPlugin {
     registrar->AddPlugin(std::move(plugin));
   }
 
-  virtual ~FlutterWebRTCPluginImpl() {}
+  virtual ~FlutterWebRTCPluginImpl() {
+    // Plugins are destroyed in an arbitrary order, so a dependent plugin can
+    // outlive this one and would otherwise reach a freed FlutterWebRTC through
+    // FlutterWebRTCPluginSharedInstance.
+    if (g_shared_instance == webrtc_.get()) {
+      g_shared_instance = nullptr;
+    }
+  }
 
   BinaryMessenger* messenger() { return messenger_; }
 
@@ -89,4 +96,22 @@ void FlutterWebRTCPluginRegisterWithRegistrar(
 
 flutter_webrtc_plugin::FlutterWebRTC* FlutterWebRTCPluginSharedInstance() {
   return g_shared_instance;
+}
+
+int FlutterWebRTCPluginLocalVideoProcessorAbiVersion() {
+  return 1;
+}
+
+bool FlutterWebRTCPluginSetLocalVideoProcessor(
+    const char* track_id,
+    flutter_webrtc_plugin::LocalVideoProcessor* processor) {
+  if (g_shared_instance == nullptr || track_id == nullptr) {
+    return false;
+  }
+  auto bridge = g_shared_instance->VideoProcessingBridgeForId(track_id);
+  if (!bridge) {
+    return false;
+  }
+  bridge->SetProcessor(processor);
+  return true;
 } 

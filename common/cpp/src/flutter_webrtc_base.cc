@@ -136,6 +136,13 @@ void FlutterWebRTCBase::RemoveMediaTrackForId(const std::string& id) {
   auto it = local_tracks_.find(id);
   if (it != local_tracks_.end())
     local_tracks_.erase(it);
+  video_processing_bridges_.erase(id);
+}
+
+std::shared_ptr<LocalVideoProcessingBridge>
+FlutterWebRTCBase::VideoProcessingBridgeForId(const std::string& id) {
+  auto it = video_processing_bridges_.find(id);
+  return it != video_processing_bridges_.end() ? it->second : nullptr;
 }
 
 FlutterPeerConnectionObserver* FlutterWebRTCBase::PeerConnectionObserversForId(
