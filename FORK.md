@@ -1,8 +1,8 @@
 # flutter_webrtc fork: local video processing hook (Windows, Linux)
 
 Fork of [flutter-webrtc/flutter-webrtc](https://github.com/flutter-webrtc/flutter-webrtc)
-(MIT — see `LICENSE`, unchanged) based on upstream tag `v1.6.0`, with one patch that
-upstream does not have yet.
+(MIT — see `LICENSE`; upstream's copyright notice is retained, with one line added for
+this patch) based on upstream tag `v1.6.0`, with one patch that upstream does not have yet.
 
 | Branch | What |
 |---|---|
